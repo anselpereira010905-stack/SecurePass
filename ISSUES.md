@@ -1,5 +1,9 @@
 # Suggested GitHub Issues
 
+> **Status: all five issues below have been implemented** (including the light theme, added in the v2 UI overhaul). See the
+> "Resolved in" note under each for what changed. This file is kept
+> as a historical record of the original issue text.
+
 Copy each section below into a new GitHub Issue (title + body) once the
 repo is pushed. Suggested labels are included.
 
@@ -7,6 +11,7 @@ repo is pushed. Suggested labels are included.
 
 ## 1. Add a "Passphrase" generation mode
 **Labels:** `enhancement`, `good first issue`
+**Resolved in:** `password_generator.py` (`generate_passphrase`, `PassphraseOptions`), `data/wordlist.txt`, `ui/generator_tab.py` mode toggle, `tests/test_password_generator.py::TestPassphrase`.
 
 **Description**
 Add an alternative generation mode that produces memorable passphrases
@@ -23,6 +28,7 @@ a small local wordlist bundled with the app (no network calls).
 
 ## 2. Persist user's last-used generator settings (in-memory only across tabs, not to disk)
 **Labels:** `enhancement`
+**Resolved in:** `settings.py` (opt-in `save_preferences`/`load_preferences`/`reset_preferences`), "Save as Default" / "Reset" buttons in `ui/generator_tab.py`, `tests/test_settings.py`. Only preferences are stored, never a password — see README's "Settings persistence" section.
 
 **Description**
 Currently, generator options (length, categories, exclude-ambiguous) reset
@@ -41,6 +47,7 @@ have to reconfigure the generator each time.
 
 ## 3. Improve entropy/crack-time accuracy with configurable attacker-speed presets
 **Labels:** `enhancement`, `documentation`
+**Resolved in:** `password_checker.py` (`CrackTimeProfile`, `CRACK_TIME_PROFILES`, `get_profile`), attacker-speed dropdown in `ui/checker_tab.py`, `tests/test_password_checker.py::TestCrackTimeProfiles`. Also added an `entropy_breakdown()` function exposing the full pool/formula explanation in the UI.
 
 **Description**
 The crack-time estimate currently assumes a fixed 10 billion guesses/second.
@@ -59,6 +66,7 @@ is more educational and transparent.
 
 ## 4. Add automated GUI smoke tests
 **Labels:** `testing`
+**Resolved in:** `tests/test_ui_smoke.py` (headless via Xvfb), `.github/workflows/tests.yml` CI workflow. Also expanded logic test coverage in `tests/test_password_generator.py` and `tests/test_password_checker.py`.
 
 **Description**
 Current tests cover `password_generator.py` and `password_checker.py`
@@ -79,17 +87,7 @@ clear history) don't raise exceptions.
 
 ## 5. Add light theme / theme toggle
 **Labels:** `enhancement`, `ui`
-
-**Description**
-The app currently ships with a single dark theme (see `utils.Theme` and
-`ui/main_window.py`). Add a light theme and a toggle (e.g. a menu item or
-button in the header) to switch between them at runtime.
-
-**Tasks**
-- [ ] Extract theme colors into two named palettes (`DarkTheme`, `LightTheme`)
-- [ ] Add a runtime theme-switch function that re-applies `ttk.Style` configuration
-- [ ] Add a toggle control in the header
-- [ ] Confirm all custom `ttk` styles (buttons, progress bar, notebook tabs) look correct in both themes
+**Resolved in:** `utils.Theme` (two palettes + `set_mode`), header toggle / `Ctrl+T` / Settings tab in `ui/main_window.py` and `ui/settings_tab.py`; the UI is rebuilt on switch so every custom widget picks up the new colours. Covered by `tests/test_ui_smoke.py::test_theme_switch_rebuilds_and_keeps_history`.
 
 ---
 

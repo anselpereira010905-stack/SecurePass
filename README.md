@@ -1,295 +1,125 @@
-# SecurePass — Password Generator & Strength Checker
+# SecurePass
 
-A fully local, offline desktop application for generating cryptographically
-secure passwords and analyzing password strength. Built with Python and
-Tkinter. **No database, no backend server, no external API, no internet
-connection required.**
-
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Tkinter](https://img.shields.io/badge/GUI-Tkinter-purple)
-![Tests](https://img.shields.io/badge/tests-unittest%20%2F%20pytest-green)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
-
----
-
-## Description
-
-SecurePass is a student/portfolio-friendly desktop app that helps users
-generate strong, random passwords and evaluate how strong an existing
-password is — entirely on their own machine. All generation and analysis
-logic runs locally using Python's standard library; nothing is ever sent
-over a network.
+SecurePass is a privacy-focused, fully offline password generator and
+strength analyzer built with Python and Tkinter. Nothing you type or
+generate is ever written to a database, logged, or sent over a
+network — the entire app runs locally, including its passphrase word
+list.
 
 ## Features
 
-### 🔐 Password Generator
-- Adjustable length (4–64 characters) via slider
-- Toggle uppercase, lowercase, numbers, and special characters
-- Optionally exclude ambiguous characters (`O`, `0`, `I`, `l`, `1`)
-- Generate multiple passwords at once
-- Guarantees at least one character from every selected category
-- Uses `secrets` (CSPRNG), never `random`
-- Copy to clipboard, clear, and regenerate
-- Live strength indicator for the generated password
+**Generator** — four modes, all using Python's `secrets` CSPRNG
+- **Random** characters: 4–64 chars, per-category toggles, avoid look-alikes (`O 0 I l 1 |`), a custom "never use these characters" box, and a "no repeated characters" option
+- **Passphrase**: 3–10 words from a bundled offline word list, custom separator, capitalization, optional inserted digit
+- **PIN**: 4–12 digits that rejects guessable shapes (`0000`, `1234`, `4321`, `121212`)
+- **Speakable**: consonant–vowel passwords you can read aloud (`Tokar@a9m7uR`), with optional digits and symbol
+- Colour-coded output (letters / digits / symbols) so look-alike characters are easy to tell apart
+- Entropy computed from the generator *settings* (exact, not guessed from the string), with an animated meter and average crack time
+- Generate several at once, double-click a line to copy it, `Ctrl+G` to regenerate
+- Optional, explicitly opt-in "Save as default" (see **Settings persistence**)
 
-### 🛡️ Password Strength Checker
-- Score from 0–100 with a color-coded strength level (Very Weak → Very
-  Strong)
-- Visual progress bar
-- Character breakdown: length, uppercase, lowercase, digits, special
-- Estimated entropy (in bits), with a plain-language explanation
-- Educational estimated crack-time label, with documented assumptions
-- Detects common weaknesses: too short, single-category-only, repeated
-  characters, sequential characters (`1234`, `abcd`), and common
-  passwords/patterns (`password`, `qwerty`, `admin`, `welcome`, etc.)
-- Actionable, specific recommendations
+**Strength Checker**
+- **Live analysis** as you type (toggleable), animated 0–100 score dial, and a character-composition bar
+- Entropy estimate with a full visible breakdown (pools, formula, bits)
+- **Crack-time table** for every attacker profile at once, with human-readable durations ("619 billion years")
+- Pattern detection: common passwords/words (incl. leetspeak), repeated characters, repeated blocks (`abcabc`), sequences, keyboard walks, embedded years
+- **"Suggest"** button that offers a fresh random password (never a tweak of yours), sized to be at least as long as yours
+- Coloured preview when "Show" is on; Paste button
 
-### 👁️ Show/Hide Password
-Both the generator and checker support toggling plaintext visibility.
+**Audit** (new)
+- Paste or load a file of passwords (one per line) and get a grade A–F
+- Finds weak, **reused** and **near-duplicate** passwords (`Summer2023!` vs `Summer2024!`)
+- Results show masked values only; export a CSV report that **never contains the passwords**
+- Input is wiped after the scan by default
 
-### 🕘 Session-Only Password History
-- Every generated password can be reviewed, copied, or deleted
-- History exists **only in memory** — never written to disk
-- Clear-all button, with an explicit on-screen warning that history
-  disappears when the app closes
+**History**
+- In-memory log with search, mode filter, sortable columns, multi-select copy/remove, and summary cards (count, average, best, weak)
+- Mask / reveal toggle
+- Optional export to **TXT, CSV or JSON** — gated behind an explicit confirmation, since it writes real passwords to disk
 
-### 📊 Entropy Estimate
-Approximate entropy is calculated as `length × log2(character pool size)`
-based on the character types actually present in the password. This is
-a simplified, educational approximation, not a formal cryptographic
-guarantee.
+**Security Tips** — eight practical tips plus an interactive (never saved) hygiene checklist
 
-### ⏱️ Estimated Crack Time
-An order-of-magnitude, clearly-labeled educational estimate assuming a
-fast offline brute-force attack (10 billion guesses/second, average case
-= half the keyspace). Real-world attacker speed varies enormously
-depending on hashing algorithm and hardware — this is for intuition,
-not a promise.
+**Settings & UX**
+- **Dark / light theme** toggle (header button or `Ctrl+T`)
+- **Clipboard auto-clear**: copied passwords are wiped after 15 s – 2 min, *only if the clipboard still holds what SecurePass copied*, with a live countdown; also wiped on exit
+- Reduce-motion option, status-bar notifications instead of popup dialogs
+- Keyboard shortcuts: `Ctrl+1…6` switch tabs, `Ctrl+G` generate, `Ctrl+T` theme
+- "Delete all saved data" button
 
-### 💡 Security Tips
-A scrollable panel of practical password-hygiene advice.
+## Settings persistence
 
-## Technologies Used
+Generator *preferences* (length, character categories, passphrase word
+count/separator, etc.) can optionally be saved between runs by
+clicking **Save as Default** in the Generator tab. This is opt-in only
+— nothing is written to disk unless you click that button.
 
-- **Python 3.11+**
-- **Tkinter / ttk** — GUI (dark theme, custom styling)
-- **secrets** — cryptographically secure password generation
-- **string** — character set definitions
-- **re** — pattern detection (sequential/repeated characters)
-- **math** — entropy calculation
-- **dataclasses** — clean, typed data containers
-- **unittest / pytest** — automated tests
-
-No third-party packages are required to run the application. `pytest` is
-only needed if you prefer it over the built-in `unittest` runner.
+- Stored at `~/.securepass/settings.json` (generator) and `~/.securepass/app_settings.json` (theme, clipboard timer, motion, history masking) — in plain, human-readable JSON; app settings are saved only when you click **Save app settings**
+- Contains only preference values (numbers, booleans, a short separator string) — **never** a generated password or anything typed into the Strength Checker
+- **Reset** restores factory defaults and deletes the settings file
 
 ## Requirements
 
-- Python 3.11 or later
-- Tkinter (bundled with most Python installers; see note below for Linux)
+- Python 3.11+
+- Tkinter (usually bundled with Python; on Debian/Ubuntu install with `sudo apt install python3-tk` if missing)
+- No third-party package is required to run the GUI
 
-## Installation
+## Run
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/<your-username>/SecurePass.git
-cd SecurePass
+From this folder:
 
-# 2. (Optional but recommended) create a virtual environment
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-
-# 3. Install optional dev/test dependency (pytest)
-pip install -r requirements.txt
-```
-
-**Linux users:** Tkinter sometimes isn't bundled with the system Python
-and must be installed separately:
-
-```bash
-sudo apt install python3-tk        # Debian/Ubuntu
-sudo dnf install python3-tkinter   # Fedora
-```
-
-## How to Run
-
-```bash
+```powershell
 python main.py
 ```
 
-That's it — no server to start, no API key to configure, no internet
-connection needed after Python is installed.
+Or double-click `run_securepass.bat` on Windows.
 
-## How Password Generation Works
+## Tests
 
-1. The user's selected options (length, categories, ambiguous-character
-   exclusion) are validated.
-2. One character pool string is built per selected category.
-3. Using `secrets.choice`, one character is drawn from **each** selected
-   category first, guaranteeing every required category is represented.
-4. The remaining length is filled by drawing from the combined pool with
-   `secrets.choice`.
-5. The final character list is shuffled with a secure Fisher–Yates
-   shuffle (using `secrets.randbelow` for the random index), so
-   required characters aren't predictably placed at the start.
+The suite covers three layers: pure generation/analysis logic, opt-in
+settings persistence, and headless GUI smoke tests for the Tkinter
+layer.
 
-## How Strength Scoring Works
-
-The 0–100 score is built from three components, then adjusted by
-penalties:
-
-| Component | Max Points | Basis |
-|---|---|---|
-| Length | 30 | Longer passwords score higher (≥16 chars = full marks) |
-| Character variety | 40 | 10 points per category present (upper/lower/digit/special) |
-| Entropy bonus | 20 | Scaled from the calculated entropy in bits |
-| **Penalties** | −30 to −60 | Common pattern (−30), repeated run (−15), sequential run (−15) |
-
-The final score is clamped to `0–100` and mapped to a level:
-
-| Score | Level |
-|---|---|
-| 0–20 | Very Weak |
-| 21–40 | Weak |
-| 41–60 | Fair |
-| 61–80 | Strong |
-| 81–100 | Very Strong |
-
-## Why `secrets` Instead of `random`?
-
-Python's `random` module uses a Mersenne Twister PRNG. It is fast and
-great for simulations/games, but it is **deterministic and predictable**
-if enough output is observed — its internal state can, in principle, be
-reconstructed. That makes it unsuitable for anything security-sensitive.
-
-`secrets` is built specifically for security purposes: it draws from the
-operating system's cryptographically secure random source (`os.urandom`
-under the hood), making generated values suitable for passwords, tokens,
-and similar secrets. This project uses `secrets.choice` and
-`secrets.randbelow` everywhere randomness affects password content.
-
-## Security Considerations
-
-- All processing happens locally — no network calls are ever made.
-- Passwords are never written to a file, database, or log.
-- Passwords are never printed to the console.
-- Password history is kept in memory only and is cleared on exit.
-- The strength checker and its "common password" list are educational
-  heuristics, not a real breach-database lookup (e.g. not a substitute
-  for a service like "Have I Been Pwned").
-- Entropy and crack-time figures are **estimates** based on documented,
-  simplified assumptions — they are not guarantees of real-world
-  security.
-- This application does not claim to provide perfect or complete
-  security; it is a learning tool and a convenience utility.
-
-## Project Structure
-
-```
-SecurePass/
-├── main.py                  # Application entry point
-├── password_generator.py    # Secure password generation logic
-├── password_checker.py      # Strength analysis logic
-├── utils.py                 # Clipboard helper, theme colors, history store
-├── ui/
-│   ├── __init__.py
-│   ├── main_window.py       # Root window, theming, tab assembly
-│   ├── generator_tab.py     # Generator tab UI
-│   ├── checker_tab.py       # Strength Checker tab UI
-│   ├── history_tab.py       # History tab UI
-│   └── tips_tab.py          # Security Tips tab UI
-├── tests/
-│   ├── __init__.py
-│   ├── test_generator.py    # Tests for password_generator.py
-│   └── test_checker.py      # Tests for password_checker.py
-├── requirements.txt
-├── README.md
-└── .gitignore
+```powershell
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-## Testing
+Or with pytest:
 
-Run the full test suite with `unittest`:
+```powershell
+pytest
+```
+
+The GUI smoke tests (`tests/test_ui_smoke.py`) need a display. On a
+headless Linux machine (e.g. CI), run them under a virtual display:
 
 ```bash
-python -m unittest discover tests
+sudo apt install python3-tk xvfb
+xvfb-run -a pytest
 ```
 
-or with `pytest` (after `pip install -r requirements.txt`):
+This is exactly what `.github/workflows/tests.yml` does on every push
+and pull request.
 
-```bash
-pytest tests/ -v
-```
-
-Tests cover: generated password length, character-category enforcement,
-ambiguous-character exclusion, empty/very-short passwords, strong/weak
-password scoring, common-password detection, sequential- and
-repeated-character detection, entropy calculation, and strength-level
-bucketing. Tests check password *properties* (length, character
-membership, score ranges) rather than printing actual password values.
-
-## Screenshots
-
-_Add screenshots here after running the app locally, e.g.:_
+## Project layout
 
 ```
-screenshots/
-├── generator-tab.png
-├── checker-tab.png
-├── history-tab.png
-└── tips-tab.png
+main.py                 entry point
+password_generator.py   random / passphrase / PIN / speakable generation + entropy
+password_checker.py     scoring, patterns, crack-time estimates
+audit.py                bulk audit (reuse + near-duplicate detection)
+settings.py             opt-in preferences (generator + app)
+utils.py                theme palettes, clipboard manager, history store
+ui/                     Tkinter UI (widgets, one module per tab)
+tests/                  logic, settings and headless GUI tests
 ```
 
-## Troubleshooting
+## Privacy
 
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError: No module named '_tkinter'` | Install Tkinter via your OS package manager (see Installation section). |
-| Window opens but looks unstyled/wrong colors | Some minimal Linux/WSL Tk builds don't fully support the `clam` ttk theme's color overrides — try updating your Tk installation. |
-| Clipboard copy fails / raises an error | Some headless Linux environments lack a clipboard manager; run the app in a normal desktop session. |
-| App won't launch, `TclError: no display name` | You're running in a headless environment with no GUI display. SecurePass requires a graphical desktop session. |
-| "No usable characters remain" error | You've selected "Exclude Ambiguous Characters" with only a category that contains solely ambiguous characters — enable another category. |
+SecurePass is designed to work entirely locally:
 
-## Future Improvements
-
-- Passphrase (word-based) generation mode
-- Optional local check against a larger offline common-password list
-- Export/print security-tips as PDF
-- Adjustable dark/light theme toggle
-- Localization / multi-language support
-
-## License
-
-MIT License — see below.
-
-```
-MIT License
-
-Copyright (c) 2026 SecurePass Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-### Run Command (Quick Reference)
-
-```bash
-python main.py
-```
+- Passwords generated or analyzed are never sent to a server or written to a database
+- The passphrase word list is bundled with the app — generating a passphrase never touches the network
+- The clipboard is wiped after a configurable delay (and on exit) if it still contains something SecurePass copied
+- Audit reports and on-screen audit results never contain plaintext passwords
+- Generation history exists only in memory and is erased when the app closes, unless you explicitly export it
+- Saved generator preferences (if any) never include a password — see **Settings persistence** above
